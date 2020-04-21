@@ -24,7 +24,7 @@ const types = [
     [NUMBER,  /^[0-9]*/],
     [LET,     /^let/],
     [IF,      /^if/],
-    [FN,      /^fn/],
+    [FN,      /^def/],
     [NAME,    /^[a-z\*\-\+\/\^\=]*/],
 ]
 
@@ -44,6 +44,9 @@ const rules = Rules(AddType => [
         Rule([ NUMBER ], ([number]) => Number.parseFloat(number)),
         Rule([ IF, VALUE, VALUE, VALUE ]),
         Rule([ LET, NAME, VALUE, VALUE ]),
+        Rule([ FN, NAME, OPEN_P, PARAM, CLOSE_P, VALUE, VALUE],
+            ([ _fn, name, _opp, params, _clp, value, value2 ]) => ["def", name, params, value, value2]
+        ),
         Rule([ FN, OPEN_P, PARAM, CLOSE_P, VALUE ],
             ([ fn, _opp, params, _clp, value ]) => [fn, params, value]
         ),
@@ -53,7 +56,7 @@ const rules = Rules(AddType => [
     ])
 ])
 
-const file = fs.readFileSync("./source.txt").toString()
+const file = fs.readFileSync("./test/source.txt").toString()
 const tokens = Lexer(types, file)
 
 const ast = Parse(rules, VALUE, tokens)
@@ -61,15 +64,24 @@ const ast = Parse(rules, VALUE, tokens)
 console.log(ast)
 
 const operators = new Map([
-    ["=", "=="],
+    ["==","=="],
+    ["!=","!="],
+    [">=",">="],
+    ["<=","<="],
+    ["<",  "<"],
+    [">",  ">"],
     ["+",  "+"],
+    ["-",  "-"],
     ["*",  "*"],
+    ["/",  "/"],
     ["^", "**"]
 ])
 
+let retNext = (ast, space) => `\n${space}${ast[0] == "let" || ast[0] == "def" ? "" : "return "}${make(ast, space)}`
+
 let make = (ast, space="") => {
     if (ast[0] == "let") {
-        return `const ${ast[1]} = ${make(ast[2])}\n${space}${ast[3][0] == "let" ? "" : "return "}${make(ast[3])}`
+        return `const ${ast[1]} = ${make(ast[2])}${retNext(ast[3], space)}`
     }
 
     if (ast[0] == "if") {
@@ -77,15 +89,15 @@ let make = (ast, space="") => {
     }
 
     if (ast[0] == "fn") {
-        return `(${ast[1].join(", ")}) => {\n${space + "    "}${ast[2][0] == "let" ? "" : "return "}${make(ast[2], space + "    ")}\n${space}}`
+        return `(${ast[1].join(", ")}) => {${retNext(ast[2], space + "    ")}`
+    }
+
+    if (ast[0] == "def") {
+        return `let ${ast[1]} = (${ast[2].join(", ")}) => {${retNext(ast[3], space + "    ")}\n${space}}${retNext(ast[4], space)}`
     }
 
     if ( operators.has(ast[0]) ) {
-        return `${make(ast[1][0])} ${operators.get(ast[0])} ${make(ast[1][1])}`
-    }
-
-    if (ast[0] == "+") {
-        return `${make(ast[1][0])} + ${make(ast[1][1])}`
+        return `(${make(ast[1][0])} ${operators.get(ast[0])} ${make(ast[1][1])})`
     }
 
     if (Array.isArray(ast)) {
@@ -95,6 +107,8 @@ let make = (ast, space="") => {
     return ast
 }
 
-console.log( make(ast) )
+let output = make(ast)
 
-{const x = 5; {const y = 6; {}}}
+console.log( output )
+
+fs.writeFile("./test/output.js", output, () => {})
