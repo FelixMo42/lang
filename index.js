@@ -1,8 +1,8 @@
 const fs = require("fs")
 
-const Lexer = require("./Lexer")
-const Parse = require("./Parse")
-const Rules = require("./Rules")
+const Lexer = require("./lib/Lexer")
+const Parse = require("./lib/Parse")
+const Rules = require("./lib/Rules")
 
 // lexer tokens
 const NUMBER  = Symbol("Number")
@@ -61,51 +61,8 @@ const tokens = Lexer(types, file)
 
 const ast = Parse(rules, VALUE, tokens)
 
-const operators = new Map([
-    ["==","=="],
-    ["!=","!="],
-    [">=",">="],
-    ["<=","<="],
-    ["<",  "<"],
-    [">",  ">"],
-    ["+",  "+"],
-    ["-",  "-"],
-    ["*",  "*"],
-    ["/",  "/"],
-    ["^", "**"]
-])
-
-let retNext = (ast, space) => `\n${space}${ast[0] == "let" || ast[0] == "def" ? "" : "return "}${make(ast, space)}`
-
-let make = (ast, space="") => {
-    if (ast[0] == "let") {
-        return `const ${ast[1]} = ${make(ast[2])}${retNext(ast[3], space)}`
-    }
-
-    if (ast[0] == "if") {
-        return `(${make(ast[1])} ? ${make(ast[2])} : ${make(ast[3])})`
-    }
-
-    if (ast[0] == "fn") {
-        return `(${ast[1].join(", ")}) => {${retNext(ast[2], space + "    ")}`
-    }
-
-    if (ast[0] == "def") {
-        return `let ${ast[1]} = (${ast[2].join(", ")}) => {${retNext(ast[3], space + "    ")}\n${space}}${retNext(ast[4], space)}`
-    }
-
-    if ( operators.has(ast[0]) ) {
-        return `(${make(ast[1][0])} ${operators.get(ast[0])} ${make(ast[1][1])})`
-    }
-
-    if (Array.isArray(ast)) {
-        return `${ast[0]}(${ast[1].map(make).join(", ")})`
-    }
-
-    return ast
-}
-
-let output = make(ast)
+const ToJs   = require("./zed/ToJs")
+const output = ToJs(ast)
 
 console.log("\n========")
 console.log( ast )
