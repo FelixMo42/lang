@@ -1,7 +1,7 @@
 const fs = require("fs")
 
 const Lexer = require("./lib/Lexer")
-const Parse = require("./lib/ParseV2")
+const Parse = require("./lib/Parse")
 const Rules = require("./lib/Rules")
 
 // lexer tokens
@@ -45,7 +45,7 @@ const rules = Rules(AddType => [
         Rule([ IF, VALUE, VALUE, VALUE ]),
         Rule([ LET, NAME, VALUE, VALUE ]),
         Rule([ FN, NAME, OPEN_P, PARAM, CLOSE_P, VALUE, VALUE],
-            ([ _fn, name, _opp, params, _clp, value, value2 ]) => ["def", name, params, value, value2]
+            ([ _fn, name, _opp, params, _clp, body, value ]) => ["let", name, ["fn", params, body], value]
         ),
         Rule([ FN, OPEN_P, PARAM, CLOSE_P, VALUE ],
             ([ fn, _opp, params, _clp, value ]) => [fn, params, value]
@@ -61,11 +61,10 @@ const tokens = Lexer(types, file)
 
 const ast = Parse(rules, VALUE, tokens)
 
-const ToJs   = require("./zed/ToJs")
-const output = ToJs(ast)
+const output = require("./zed/ToJs")(ast)
 
-console.log("\n========")
-console.log( ast )
+console.log("\n========>")
+// console.log( ast )
 console.log( output )
 
 fs.writeFile("./sample/output.js", output, () => {})

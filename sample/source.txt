@@ -2,5 +2,5 @@ def x (a b c)
     let c 6
         (+ (* a c) b)
 
-let y 5    
+let y 
     (x y 3)

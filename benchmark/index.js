@@ -12,8 +12,7 @@ let text = `\
 // )
 
 suite
-    .add('langV2', require("./benc_langV2")(text))
-    .add('langV1', require("./benc_langV1")(text))
+    .add('langV1', require("./benc_lang")(text))
     // .add('parsimmon', require("./benc_parsimmon")(text))
     
     .on('cycle', function(event) {

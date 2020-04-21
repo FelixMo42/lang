@@ -1,5 +1,5 @@
 const Lexer = require("../lib/Lexer")
-const Parse = require("../lib/ParseV2")
+const Parse = require("../lib/Parse")
 const Rules = require("../lib/Rules")
 
 const Expression = Symbol("Expression")

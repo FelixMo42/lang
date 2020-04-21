@@ -1,6 +1,6 @@
-let x = (a, b, c) => {
+const x = (a, b, c) => {
     const c = 6
     return ((a * c) + b)
 }
-const y = 5
-return x(y, 3)
+const y = x(y, 3)
+return () => `✗: unexpected token "${token.body}" of type ${Info(token.type)}`
