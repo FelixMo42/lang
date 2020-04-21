@@ -10,8 +10,6 @@ const Lexer = module.exports = (types, file) =>
             for (let [type, pattern] of types) {
                 let match = file.match(pattern)
 
-                // console.log(match)
-
                 if ( match && match[0].length > length ) {
                     longest = type
                     value = match[0]

@@ -5,18 +5,18 @@ const Parse = require("./Parse")
 const Rules = require("./Rules")
 
 // lexer tokens
-const NUMBER  = Symbol("type#NUMBER")
-const NAME    = Symbol("type#NAME")
-const OPEN_P  = Symbol("type#OPEN_P")
-const CLOSE_P = Symbol("type#CLOSE_P")
-const LET     = Symbol("type#LET")
-const IF      = Symbol("type#IF")
-const FN      = Symbol("type#FN")
+const NUMBER  = Symbol("Number")
+const NAME    = Symbol("Name")
+const OPEN_P  = Symbol("Open Parentheses")
+const CLOSE_P = Symbol("Close Parentheses")
+const LET     = Symbol("Let")
+const IF      = Symbol("If")
+const FN      = Symbol("Function")
 
 // parser tokens
-const VALUE   = Symbol("type#VALUE")
-const LIST    = Symbol("type#LIST")
-const PARAM   = Symbol("type#PARAM")
+const VALUE   = Symbol("Value")
+const LIST    = Symbol("List")
+const PARAM   = Symbol("Param")
 
 const types = [
     [OPEN_P,  /^\(/],
@@ -60,8 +60,6 @@ const file = fs.readFileSync("./test/source.txt").toString()
 const tokens = Lexer(types, file)
 
 const ast = Parse(rules, VALUE, tokens)
-
-console.log(ast)
 
 const operators = new Map([
     ["==","=="],
@@ -109,6 +107,8 @@ let make = (ast, space="") => {
 
 let output = make(ast)
 
+console.log("\n========")
+console.log( ast )
 console.log( output )
 
 fs.writeFile("./test/output.js", output, () => {})

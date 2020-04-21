@@ -1,56 +1,59 @@
-const EOF     = Symbol("type#EOF")
-const ERROR   = Symbol("type#ERROR")
+const Token = (type, body, next) => ({type, body, next})
 
-const MakeToken = (type, body, next) =>
-    ({type, body, next})
+const MakeError = (body, next) => Token(ERROR, body, next)
 
-const MakeError = (body, next) =>
-    MakeToken(ERROR, body, next)
+const TokenStream = (toks, i=0) => toks.length == i ? EOF : Token(toks[i][0], toks[i][1], TokenStream(toks, i + 1))
 
-const MakeTokenStream = (tokens, i=0) =>
-    tokens.length == i ? MakeToken(EOF) :
-        MakeToken( tokens[i][0], tokens[i][1], MakeTokenStream(tokens, i + 1) )
+const IsError = token => token.type == ERROR
 
-const IsError = token =>
-    token.type == ERROR
+const IsRequired = step => step.description == "Close Parentheses"
 
-const TokenStackToString = token =>
-    token.type != EOF ? token.type.description + " " + TokenStackToString(token.next) : ""
+const Info = value => value.description
 
-const EatRule = (rules, type, rule, token) =>
-    {
-        let next = token
-        let body = []
+const EatRule = (rules, type, rule, token) => {
+    let next = token
+    let body = []
 
-        for (let step of rule) {
-            result = Eat(rules, step, next)
+    for (let step of rule) {
+        result = Eat(rules, step, next)
 
-            if ( IsError(result) ) return MakeError(result, token)
+        if ( IsError(result) ) {
+            if ( !IsRequired(step) ) {
+                return MakeError(result, token)
+            }
 
-            body.push(result.body)
-            next = result.next
+            console.log( result.body )
         }
 
-        return MakeToken(type, rule.final(body), next)
+        body.push(result.body)
+        next = result.next
     }
 
-const Eat = (rules, type, token) =>
-    {
-        if (token.type == type) return token
+    return Token(type, rule.final(body), next)
+}
 
-        if ( !rules.has(type) ) return MakeError(
-            `got token of type ${token.type.description}, expected ${type.description}`,
-            token.next
-        )
+const Eat = (rules, type, token) => {
+    if (token.type == type) return token
 
-        for (let rule of rules.get(type)) {
-            let result = EatRule(rules, type, rule, token)
+    if ( !rules.has(type) ) return MakeError(
+        `got token of type ${Info(token.type)}, expected ${Info(type)}`,
+        token.next
+    )
 
-            if ( !IsError(result) ) return result
-        }
+    for (let rule of rules.get(type)) {
+        let result = EatRule(rules, type, rule, token)
 
-        return MakeError('foo', token)
+        if ( !IsError(result) ) return result
     }
 
-const Parse = module.exports = (rules, type, tokens) =>
-    Eat(rules, type, MakeTokenStream(tokens)).body
+    return MakeError(`unexpected token "${token.body}" or type ${Info(token.type)}`, token)
+}
+
+const Parse = module.exports = (rules, type, tokens) => Eat(rules, type, TokenStream(tokens)).body
+
+const EOF   = Token(Symbol("EOF"))
+const ERROR = Symbol("Error")
+
+//
+
+const TokenList = token => token.type != EOF ? Info(token.type) + " " + TokenList(token.next) : ""
