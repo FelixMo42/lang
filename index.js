@@ -1,7 +1,7 @@
 const fs = require("fs")
 
 const Lexer = require("./lib/Lexer")
-const Parse = require("./lib/ParseV1")
+const Parse = require("./lib/ParseV2")
 const Rules = require("./lib/Rules")
 
 // lexer tokens
@@ -56,7 +56,7 @@ const rules = Rules(AddType => [
     ])
 ])
 
-const file   = fs.readFileSync("./test/source.txt").toString()
+const file   = fs.readFileSync("./sample/source.txt").toString()
 const tokens = Lexer(types, file)
 
 const ast = Parse(rules, VALUE, tokens)
@@ -68,4 +68,4 @@ console.log("\n========")
 console.log( ast )
 console.log( output )
 
-fs.writeFile("./test/output.js", output, () => {})
+fs.writeFile("./sample/output.js", output, () => {})
