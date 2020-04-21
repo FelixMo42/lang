@@ -1,0 +1,5 @@
+let x fn (a b)
+        let c 6
+            (+ (+ a b) c)
+            
+    (x (* 7 6) 4)
