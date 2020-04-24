@@ -42,24 +42,6 @@ let Or = (...sets) => {
     return [first, last]
 }
 
-// nfa utility functions //
-
-const GetStatesOfNFA = nfa => {
-    let states = new Set()
-
-    GetStateOfNFA( nfa[0], states)
-
-    return states
-}
-
-const GetStateOfNFA = (state, states) => {
-    if ( states.has(state) ) return
-
-    states.add( state )
-
-    state.forEach(([input, next]) => GetStateOfNFA(next, states))
-}
-
 // dfa //
 
 const MakeStateDFA = () => ({
@@ -83,60 +65,39 @@ const ExpandStateFromSubstate = (substates, connections, substate) => {
     }
 }
 
-const ExpandStateFromSubstates = (baseSubstates) => {
+const StateFromSubstates = (baseSubstates) => {
     let substates = new Set()
     let connections = new Map()
 
-    for (let substate of baseSubstates) {
-        ExpandStateFromSubstate(substates, connections, substate)
-    }
+    for (let substate of baseSubstates) ExpandStateFromSubstate(substates, connections, substate)
 
-    return [substates, connections]
+    return [StateNameFromSubstates(substates), connections]
 }
 
-const DFA = {}
-
-DFA.StateName = (substates) => {
+const StateNameFromSubstates = (substates) => {
     let name = ""
 
-    for (let substate of [...substates].sort((a, b) => a.id - b.id)) {
-        name += substate.id + ","
-    }
+    for (let substate of [...substates].sort((a, b) => a.id - b.id)) name += substate.id + ","
 
     return name
 }
 
-DFA.MapConnectionsToStateNames = (dfa, connections) => {
-    let map = new Map()
+const AddStateToDFA = (dfa, baseSubstates) => {
+    let [stateName, connections] = StateFromSubstates(baseSubstates)
 
-    for (let [input, baseSubstates] of connections.entries()) {
-        let [substates, connections] = ExpandStateFromSubstates(baseSubstates)
+    if ( dfa.has( stateName ) ) return dfa.get( stateName )
 
-        map.set(input, DFA.StateName(substates))
-    }
+    let links = []
 
-    return map
+    dfa.set( stateName, links )
+
+    for (let [ input, baseSubstates ] of connections.entries())
+        links.push([ input, AddStateToDFA( dfa, baseSubstates )  ])
+
+    return links
 }
 
-DFA.IncludesState = (dfa, substates) => dfa.has( DFA.StateName( substates ) )
-
-const ToDFA = nfa => {
-    let dfa = new Map()
-
-    let todo = [ new Set([ nfa[0] ]) ]
-    
-    for (let baseSubstates of todo) {
-        let [substates, connections] = ExpandStateFromSubstates(baseSubstates)
-
-        if (  DFA.IncludesState(dfa,  substates) ) continue
-
-        dfa.set( DFA.StateName(substates), DFA.MapConnectionsToStateNames(dfa, connections) )
-
-        connections.forEach(baseSubstates => todo.push(baseSubstates))
-    }
-
-    return dfa
-}
+const ToDFA = nfa => AddStateToDFA(new Map(), [ nfa[0] ])
 
 // test //
 
