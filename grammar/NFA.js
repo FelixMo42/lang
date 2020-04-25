@@ -4,8 +4,6 @@ const NFA = module.exports = {}
 
 NFA.EMPTY = EMPTY = Symbol("Empty")
 
-const NONTERMINAL = Symbol("Non Terminal")
-
 // ndfa building functions //
 
 let id = 1
@@ -16,7 +14,7 @@ const GetId = () => {
     // id <<= 1
     id += 1
 
-    return old + ", "
+    return old + ","
 }
 
 const State = () => Object.assign([], { final: false, id: GetId() })
@@ -27,8 +25,8 @@ const Link = (from, to, input, ret=[from,to]) => {
     return ret
 }
 
-NFA.Final = (set, final=true) => {
-    set[1].final = final
+NFA.Final = (set) => {
+    set[1].final = true
 
     return set
 }

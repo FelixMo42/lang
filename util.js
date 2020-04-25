@@ -24,6 +24,4 @@ module.exports = {
 
         return false
     },
-
-    arrayObject: (data) => Object.assign([], data)
 }

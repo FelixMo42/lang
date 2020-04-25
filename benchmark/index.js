@@ -6,14 +6,9 @@ let text = `\
     (print 5 golden rings)
 `;
 
-// console.log(
-//     require("./benc_parsimmon")(text)(),
-//     require("./benc_lang")(text)(),
-// )
-
 suite
     .add('langV1', require("./benc_lang")(text))
-    // .add('parsimmon', require("./benc_parsimmon")(text))
+    .add('parsimmon', require("./benc_parsimmon")(text))
     
     .on('cycle', function(event) {
         console.log(String(event.target))
