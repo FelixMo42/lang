@@ -34,7 +34,6 @@ let rules = new Map([
     ) )]
 ])
 
-
 // console.log( Parse(rules, File, Lexer(types, `\
 //     (list 1 2 (cons 1 (list)))
 //     (print 5 golden rings)

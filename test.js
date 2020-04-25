@@ -1,6 +1,6 @@
 const NFA = require("./grammar/NFA")
 const Lexer = require("./lib/Lexer")
-const Parse = require("./lib/ParseV2")
+const Parse = require("./lib/Parse")
 
 const OPEN = Symbol("open parenthesis")
 const CLOSE = Symbol("close parenthesis")
