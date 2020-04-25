@@ -1,4 +1,5 @@
 const fs = require("fs")
+const NFA = require("./grammar/NFA")
 
 const Lexer = require("./lib/Lexer")
 const Parse = require("./lib/Parse")
@@ -29,6 +30,7 @@ const types = [
 ]
 
 const Unwrap = ([token]) => token
+
 
 const rules = Rules(AddType => [
     AddType(LIST, Rule => [

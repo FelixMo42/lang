@@ -1,42 +1,56 @@
-const EMPTY = Symbol("Empty")
+const _ = require("../util")
+
+const NFA = module.exports = {}
+
+NFA.EMPTY = EMPTY = Symbol("Empty")
+
+const NONTERMINAL = Symbol("Non Terminal")
 
 // ndfa building functions //
 
+let id = 1
+
+const GetId = () => {
+    let old = id
+
+    // id <<= 1
+    id += 1
+
+    return old + ", "
+}
+
+const State = () => Object.assign([], { final: false, id: GetId() })
+
 const Link = (from, to, input, ret=[from,to]) => {
     from.push([input, to])
+
     return ret
 }
 
-let id = 0
+NFA.Final = (set, final=true) => {
+    set[1].final = final
 
-const State = (final=false) => {
-    let state = []
-
-    state.final = final
-    state.id = id
-    id += 1
-
-    return state
+    return set
 }
 
-const Step = input => Link(State(), State(), input)
+NFA.Step = input => Link(State(), State(), input)
 
-const Loop = set => Link(set[1], set[0], EMPTY, set)
+NFA.Loop = set => Link(set[1], set[0], EMPTY, set)
 
-const Optional = set => Link(set[0], set[1], EMPTY, set)
+NFA.Optional = set => Link(set[0], set[1], EMPTY, set)
 
-const Union = (...sets) => [
+NFA.Union = (...sets) => [
     sets[0][0],
     sets.reduce((last, curr) => Link(last[1], curr[0], EMPTY, curr))[1]
 ]
 
-let Or = (...sets) => {
+NFA.Or = (...sets) => {
     let first = []
     let last = []
 
     sets.forEach(set => {
-        Link(first, set[0])
-        Link(set[1], last)
+        Link(first, set[0], EMPTY)
+        Link(set[1], last, EMPTY)
     })
 
     return [first, last]
@@ -44,10 +58,7 @@ let Or = (...sets) => {
 
 // dfa //
 
-const MakeStateDFA = () => ({
-    substates: new Set(),
-    connections: new Map()
-})
+const StateNameFromSubstates = substates => _.sum(substates, substate => substate.id, "")
 
 const ExpandStateFromSubstate = (substates, connections, substate) => {
     if ( substates.has(substate) ) return
@@ -71,45 +82,26 @@ const StateFromSubstates = (baseSubstates) => {
 
     for (let substate of baseSubstates) ExpandStateFromSubstate(substates, connections, substate)
 
-    return [StateNameFromSubstates(substates), connections]
-}
-
-const StateNameFromSubstates = (substates) => {
-    let name = ""
-
-    for (let substate of [...substates].sort((a, b) => a.id - b.id)) name += substate.id + ","
-
-    return name
+    return [
+        StateNameFromSubstates(substates),
+        _.some(substates, substate => substate.final),
+        connections
+    ]
 }
 
 const AddStateToDFA = (dfa, baseSubstates) => {
-    let [stateName, connections] = StateFromSubstates(baseSubstates)
+    let [ stateName, final, connections ] = StateFromSubstates( baseSubstates )
 
     if ( dfa.has( stateName ) ) return dfa.get( stateName )
 
-    let links = []
+    let links = Object.assign([], { final })
 
     dfa.set( stateName, links )
 
     for (let [ input, baseSubstates ] of connections.entries())
-        links.push([ input, AddStateToDFA( dfa, baseSubstates )  ])
+        links.push([ input, AddStateToDFA(dfa, baseSubstates) ])
 
     return links
 }
 
-const ToDFA = nfa => AddStateToDFA(new Map(), [ nfa[0] ])
-
-// test //
-
-const A = Symbol("A")
-const B = Symbol("B")
-
-let nfa =
-    Optional(
-        Union(
-            Loop( Step( A ) ),
-            Step( B )
-        )
-    )
-
-console.log( ToDFA(nfa) )
+NFA.ToDFA = nfa => AddStateToDFA(new Map(), [ nfa[0] ])
