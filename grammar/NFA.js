@@ -57,9 +57,7 @@ NFA.Or = (...sets) => {
 
 // dfa //
 
-const StateNameFromSubstates = substates => {
-    return _.sum(substates, substate => substate.id)
-}
+const StateNameFromSubstates = substates => _.sum(substates, substate => substate.id)
 
 const ExpandStateFromSubstate = (substates, connections, substate) => {
     if ( substates.has(substate) ) return
