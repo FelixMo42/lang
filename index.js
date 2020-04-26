@@ -20,7 +20,10 @@ let Parse = Language(({Word, KeyWord, Rule, Loop, Optional, Case}) => ({
         Case([ LET, name, value, value ]),
         Case([ DEF, Optional(name), OPEN, Loop(name), CLOSE,  value, value ]),
         Case([ OPEN, name, Loop(value), CLOSE ])
-    ])
+    ]),
+
+    // paramtaers
+    start_rule: "value"
 }))
 
 console.log( Parse( "(abc (a b))") )

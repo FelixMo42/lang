@@ -22,10 +22,11 @@ let parse = Language(({Word, KeyWord, Rule, Loop, Optional, Case}) => ({
     start_rule: "file"
 }))
 
-
-// console.log( JSON.stringify(parse(`\
-//     (list 1 2 (cons 1 (list)))
-//     (print 5 golden rings)
-// `), null, "   ") )
+if (require.main === module) {
+    console.log( JSON.stringify(parse(`\
+        (list 1 2 (cons 1 (list)))
+        (print 5 golden rings)
+    `), null, "   ") )
+}
 
 module.exports = text => () => parse(text)

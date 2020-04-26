@@ -8,9 +8,8 @@ let text = `\
 
 suite
     .add('lang', require("./benc_lang")(text))
-    // .add('langV2', require("./benc_lang2")(text))
     .add('parsimmon', require("./benc_parsimmon")(text))
-    
+
     .on('cycle', function(event) {
         console.log(String(event.target))
     })
