@@ -57,16 +57,3 @@ const rules = Rules(AddType => [
         )
     ])
 ])
-
-const file   = fs.readFileSync("./sample/source.txt").toString()
-const tokens = Lexer(types, file)
-
-const ast = Parse(rules, VALUE, tokens)
-
-const output = require("./zed/ToJs")(ast)
-
-console.log("\n========>")
-// console.log( ast )
-console.log( output )
-
-fs.writeFile("./sample/output.js", output, () => {})
