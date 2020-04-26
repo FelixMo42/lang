@@ -30,4 +30,22 @@ module.exports = {
 
         return true
     },
+
+    first: (iterator, func = a => a, def) => {
+        for (let value of iterator) if ( func( value ) ) return value
+
+        return def
+    },
+
+    map: function *(iterator, func) {
+        for (let value of iterator) {
+            yield func(value)
+        }
+    },
+
+    get: function *(iterator, key) {
+        for (let value of iterator) {
+            yield value[key]
+        }
+    }
 }
