@@ -1,43 +1,31 @@
-const NFA = require("../grammar/NFA")
+const Language = require("../lib/Language")
 
-const Lexer = require("../lib/Lexer")
-const Parse = require("../lib/Parse")
+const unwrap = ([name]) => name
 
-const Expression = Symbol("Expression")
-const Name       = Symbol("Name")
-const Number     = Symbol("Number")
-const Opp        = Symbol("Open Parenthasis")
-const Cll        = Symbol("Close Parenthasis")
-const File       = Symbol("File")
+let parse = Language(({Word, KeyWord, Rule, Loop, Optional, Case}) => ({
+    name: Word("name", /^[a-zA-Z_-][a-zA-Z0-9_-]*/),
+    number: Word("number", /^[0-9]+/),
 
-const types = [
-    [Name,   /^[a-zA-Z_-][a-zA-Z0-9_-]*/],
-    [Number, /^[0-9]+/],
-    [Opp,    /^\(/],
-    [Cll,    /^\)/],
-]
+    open: KeyWord("open", /^\(/),
+    close: KeyWord("close", /^\)/),
 
-let rules = new Map([
-    [Expression, NFA.ToDFA( NFA.Final(
-        NFA.Or(
-            NFA.Step(Name),
-            NFA.Step(Number),
-            NFA.Union(
-                NFA.Step( Opp ),
-                NFA.Loop( NFA.Step( Expression ) ),
-                NFA.Step( Cll ),
-            )
-        )
-    ) ) ],
-    [File, NFA.ToDFA( NFA.Final(
-        NFA.Loop( NFA.Step( Expression ) )
-    ) )]
-])
+    expression: Rule("expression", ({name, number, open, close, expression}) => [
+        Case([ name ], unwrap),
+        Case([ number ], unwrap),
+        Case([ open, Loop( expression ), close ])
+    ]),
+
+    file: Rule("file", ({expression}) => [
+        Case([ Loop(expression) ])
+    ]),
+
+    start_rule: "file"
+}))
 
 
-// console.log( Parse(rules, File, Lexer(types, `\
+// console.log( JSON.stringify(parse(`\
 //     (list 1 2 (cons 1 (list)))
 //     (print 5 golden rings)
-// `)) )
+// `), null, "   ") )
 
-module.exports = text => () => Parse(rules, File, Lexer(types, text))
+module.exports = text => () => parse(text)

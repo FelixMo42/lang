@@ -1,59 +1,26 @@
-const fs = require("fs")
-const NFA = require("./grammar/NFA")
+const Language = require("./lib/Language")
 
-const Lexer = require("./lib/Lexer")
-const Parse = require("./lib/Parse")
-const Rules = require("./lib/Rules")
+let Parse = Language(({Word, KeyWord, Rule, Loop, Optional, Case}) => ({
+    // key words
+    LET    : KeyWord("let"),
+    DEF    : KeyWord("def"),
+    IF     : KeyWord("if"),
+    OPEN   : KeyWord("Open Parentheses", /^\(/),
+    CLOSE  : KeyWord("Close Parentheses", /^\)/),
 
-// lexer tokens
-const NUMBER  = Symbol("Number")
-const NAME    = Symbol("Name")
-const OPEN_P  = Symbol("Open Parentheses")
-const CLOSE_P = Symbol("Close Parentheses")
-const LET     = Symbol("Let")
-const IF      = Symbol("If")
-const FN      = Symbol("Function")
+    // words in the grammar
+    number : Word("number", /^[0-9]*/),
+    name   : Word("name", /^[a-zA-Z\*\-\+\/\^\=]*/),
 
-// parser tokens
-const VALUE   = Symbol("Value")
-const LIST    = Symbol("List")
-const PARAM   = Symbol("Param")
-
-const types = [
-    [OPEN_P,  /^\(/],
-    [CLOSE_P, /^\)/],
-    [NUMBER,  /^[0-9]*/],
-    [LET,     /^let/],
-    [IF,      /^if/],
-    [FN,      /^def/],
-    [NAME,    /^[a-z\*\-\+\/\^\=]*/],
-]
-
-const Unwrap = ([token]) => token
-
-
-const rules = Rules(AddType => [
-    AddType(LIST, Rule => [
-        Rule([ VALUE, LIST ], ([value, list]) => [value, ...list]),
-        Rule([ VALUE ])
-    ]),
-    AddType(PARAM, Rule => [
-        Rule([ NAME, PARAM ], ([value, param]) => [value, ...param]),
-        Rule([ NAME ])
-    ]),
-    AddType(VALUE, Rule => [
-        Rule([ NAME ], Unwrap),
-        Rule([ NUMBER ], ([number]) => Number.parseFloat(number)),
-        Rule([ IF, VALUE, VALUE, VALUE ]),
-        Rule([ LET, NAME, VALUE, VALUE ]),
-        Rule([ FN, NAME, OPEN_P, PARAM, CLOSE_P, VALUE, VALUE],
-            ([ _fn, name, _opp, params, _clp, body, value ]) => ["let", name, ["fn", params, body], value]
-        ),
-        Rule([ FN, OPEN_P, PARAM, CLOSE_P, VALUE ],
-            ([ fn, _opp, params, _clp, value ]) => [fn, params, value]
-        ),
-        Rule([ OPEN_P, NAME, LIST, CLOSE_P ],
-            ([_opp, name, params, _clp]) => [name, params]
-        )
+    // parsing rules
+    value  : Rule("value", ({LET, DEF, IF, OPEN, CLOSE, number, name, value}) => [
+        Case([ name ]),
+        Case([ number ]),
+        Case([ IF, value, value, value ]),
+        Case([ LET, name, value, value ]),
+        Case([ DEF, Optional(name), OPEN, Loop(name), CLOSE,  value, value ]),
+        Case([ OPEN, name, Loop(value), CLOSE ])
     ])
-])
+}))
+
+console.log( Parse( "(abc (a b))") )
