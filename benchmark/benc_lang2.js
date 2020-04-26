@@ -19,7 +19,8 @@ let parse = Language(({Word, KeyWord, Rule, Loop, Optional, Case}) => ({
         Case([ Loop(expression) ])
     ]),
 
-    start_rule: "file"
+    start_rule: "file",
+    // parse: require("../lib/Parse2")
 }))
 
 if (require.main === module) {

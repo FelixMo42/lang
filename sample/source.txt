@@ -1,6 +1,0 @@
-def x (a b c)
-    let c 6
-        (+ (* a c) b)
-
-let y 
-    (x y 3)
