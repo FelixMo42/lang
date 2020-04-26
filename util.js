@@ -24,4 +24,10 @@ module.exports = {
 
         return false
     },
+
+    all: (iterator, func = a => a) => {
+        for (let value of iterator) if ( !func( value ) ) return false
+
+        return true
+    },
 }

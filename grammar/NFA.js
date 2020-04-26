@@ -1,5 +1,7 @@
 const _ = require("../util")
 
+const Graph = require("./Graph")
+
 const NFA = module.exports = {}
 
 NFA.EMPTY = EMPTY = Symbol("Empty")
@@ -11,16 +13,15 @@ let id = 1
 const GetId = () => {
     let old = id
 
-    // id <<= 1
-    id += 1
+    id <<= 1
 
-    return old + ","
+    return old
 }
 
-const State = () => Object.assign([], { final: false, id: GetId() })
+const State = () => Graph.State({ final: false, id: GetId() })
 
 const Link = (from, to, input, ret=[from,to]) => {
-    from.push([input, to])
+    Graph.Link(from, to, input)
 
     return ret
 }
@@ -43,8 +44,8 @@ NFA.Union = (...sets) => [
 ]
 
 NFA.Or = (...sets) => {
-    let first = []
-    let last = []
+    let first = State()
+    let last = State()
 
     sets.forEach(set => {
         Link(first, set[0], EMPTY)
@@ -56,7 +57,9 @@ NFA.Or = (...sets) => {
 
 // dfa //
 
-const StateNameFromSubstates = substates => _.sum(substates, substate => substate.id, "")
+const StateNameFromSubstates = substates => {
+    return _.sum(substates, substate => substate.id)
+}
 
 const ExpandStateFromSubstate = (substates, connections, substate) => {
     if ( substates.has(substate) ) return
@@ -88,18 +91,18 @@ const StateFromSubstates = (baseSubstates) => {
 }
 
 const AddStateToDFA = (dfa, baseSubstates) => {
-    let [ stateName, final, connections ] = StateFromSubstates( baseSubstates )
+    let [ stateName, final, connections ] = StateFromSubstates(baseSubstates)
 
     if ( dfa.has( stateName ) ) return dfa.get( stateName )
 
-    let links = Object.assign([], { final })
+    let state = Graph.State({ final })
 
-    dfa.set( stateName, links )
+    dfa.set( stateName, state )
 
     for (let [ input, baseSubstates ] of connections.entries())
-        links.push([ input, AddStateToDFA(dfa, baseSubstates) ])
+        Graph.Link( state, AddStateToDFA(dfa, baseSubstates), input )
 
-    return links
+    return state
 }
 
 NFA.ToDFA = nfa => AddStateToDFA(new Map(), [ nfa[0] ])
