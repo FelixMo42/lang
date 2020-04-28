@@ -6,7 +6,9 @@
     "directories": {
         "lib": "lib"
     },
-    "dependencies": {},
+    "dependencies": {
+        "immutable": "^4.0.0-rc.12"
+    },
     "devDependencies": {
         "benchmark": "^2.1.4",
         "microtime": "^3.0.0",
