@@ -1,4 +1,5 @@
 const fs = require("fs")
+const _ =require("./lib/util")
 const immutable = require("immutable")
 const Language = require("./lib/Language")
 
@@ -6,12 +7,20 @@ const UnWrap = ([term]) => term
 
 // ust
 
-const Function = ([ params, value ]) => ({ type: "function", params, value })
-const FunctionCall = ([ func, arguments ]) => ({ type: "functionCall", func, arguments })
-const If = ([ condtion, then, el ]) => ({ type: "if", condtion, then, el })
-const Number = ([ number ]) => ({ type: "number", value: parseInt(number)})
-const Variable = ([ name ]) => ({ type: "variable", name })
-const Decleration = ([ key, value ]) => ({ type: "decleration" })
+const Node = (name, args) => {
+    function type(data) { return { type, data } }
+
+    type.name = name
+
+    return type
+}
+
+const Number       = Node("number", [ "value" ])
+const Function     = Node("function", [ "params", "value" ])
+const FunctionCall = Node("functionCall", [ "func", "arguments" ])
+const If           = Node("if", [ "condtion", "then", "else" ])
+const Variable     = Node("variable", [ "name" ])
+const Decleration  = Node("decleration", [ "key", "value" ])
 
 // const Programme = (data) => ({ functions: new Map(), baseScope: immutable.Map(data) })
 // const Scope = (parent=immutable.Map()) => parent
@@ -65,32 +74,32 @@ let Parse = Language(({Word, KeyWord, Rule, Loop, Case}) => ({
 //
 
 const ast = Parse( fs.readFileSync("main.ust").toString() )
-// console.log( JSON.stringify(ast, null, "   ") )
 
-const Run = (node, scope=immutable.Map()) => {
-    if ( node.type == "number" ) return node.value
+const Scope = new Map([
+    ["+", (a, b) => a + b]
+])
 
-    if ( node.type == "function" ) return node
+const Crawler = (callbacks) => {
+    const Crawl = (node, scope) => map.get(node.type)(scope)(...node.data)
 
-    if ( node.type == "variable" ) return scope.get(node.name)
+    const map = new Map( callbacks.map(type => [type[0], type[1](Crawl)]) )
 
-    if ( node.type == "functionCall" ) {
-        let func = Run(node.func)
-
-        console.log(func)
-
-        // for (let i = 0; i < node.arguments.length; i++) {
-        //     scope = scope.set( node.paramaters[i],  )
-        // }
-
-        // return Run(value, scope)
-    }
-
-    // if ( node.type == "" ) 
+    return Crawl
 }
 
-console.log(ast)
+const ERROR   = () => () => () => "Error"
+const BOOLEAN = () => () => () => "boolean"
+const NUMBER  = () => () => () => "number"
 
-Run(ast, immutable.Map({
-    "+": Function([], )
-}))
+const Crawl = Crawler([
+    [ Number, NUMBER ],
+    [ Variable, (name) => Scope.get(name) ],
+
+    [ If, typeOf => scope => (condition, then, el) => 
+        expect( typeOf(condition, scope) ).toBe( BOOLEAN ) ? ERROR :
+
+        joinTypes( typeOf( then, scope ), typeOf( el, scope ) )
+    ],
+])
+
+console.log( Crawl(ast) )
