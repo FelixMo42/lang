@@ -75,10 +75,6 @@ let Parse = Language(({Word, KeyWord, Rule, Loop, Case}) => ({
 
 const ast = Parse( fs.readFileSync("main.ust").toString() )
 
-const Scope = new Map([
-    ["+", (a, b) => a + b]
-])
-
 const Crawler = (callbacks) => {
     const Crawl = (node, scope) => map.get(node.type)(scope)(...node.data)
 
@@ -87,19 +83,46 @@ const Crawler = (callbacks) => {
     return Crawl
 }
 
-const ERROR   = () => () => () => "Error"
-const BOOLEAN = () => () => () => "boolean"
-const NUMBER  = () => () => () => "number"
+const Type = (base, params=[]) => ({base, params}) 
+
+const ERROR   = Type("Error")
+const BOOLEAN = Type("Boolean")
+const NUMBER  = Type("Number")
+
+const joinTypes = (a, b) => a == b ? a : ERROR
 
 const Crawl = Crawler([
-    [ Number, NUMBER ],
-    [ Variable, (name) => Scope.get(name) ],
+    [ Number, () => () => () => NUMBER ],
 
-    [ If, typeOf => scope => (condition, then, el) => 
-        expect( typeOf(condition, scope) ).toBe( BOOLEAN ) ? ERROR :
+    [ Variable, () => (scope) => (name) => scope.get(name) ],
 
-        joinTypes( typeOf( then, scope ), typeOf( el, scope ) )
-    ],
+    [ Function, typeOf => scope => (params, value) => {
+        let data = []
+    
+        for (let [name, type] of params) {
+            data.push(Type(type))
+
+            scope = scope.set(name, Type(type))
+        }
+
+        data.push( typeOf( value, scope ) )
+
+        return Type("Function", data)
+    }],
+
+    [ FunctionCall, typeOf => scope => (func, args) => {
+        return typeOf(func, scope).params.last()
+    }],
+
+    [ If, typeOf => scope => (condition, then, el) => {
+        if ( typeOf(condition, scope).base != "Boolean" ) {
+
+        }
+
+        return joinTypes( typeOf( then, scope ), typeOf( el, scope ) )   
+    }],
 ])
 
-console.log( Crawl(ast) )
+console.log( Crawl(ast, immutable.Map({
+    "==" : Type("Function", [NUMBER, NUMBER, BOOLEAN])
+})) )
