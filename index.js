@@ -89,7 +89,7 @@ const ERROR   = Type("Error")
 const BOOLEAN = Type("Boolean")
 const NUMBER  = Type("Number")
 
-const joinTypes = (a, b) => a == b ? a : ERROR
+const JoinTypes = (a, b) => a == b ? a : ERROR
 
 const Crawl = Crawler([
     [ Number, () => () => () => NUMBER ],
@@ -97,32 +97,40 @@ const Crawl = Crawler([
     [ Variable, () => (scope) => (name) => scope.get(name) ],
 
     [ Function, typeOf => scope => (params, value) => {
-        let data = []
-    
-        for (let [name, type] of params) {
-            data.push(Type(type))
+        let data = params.map(([name, type]) => {
+            scope.set(name, Type(type))
 
-            scope = scope.set(name, Type(type))
-        }
+            return Type(type)
+        })
 
         data.push( typeOf( value, scope ) )
 
         return Type("Function", data)
-    }],
+    } ],
 
     [ FunctionCall, typeOf => scope => (func, args) => {
+        for (let i = 0; i < args.length - 1; i++) {
+            if ( args[0] ) {
+                console.log("✗")
+            }
+        }
+
         return typeOf(func, scope).params.last()
-    }],
+    } ],
 
     [ If, typeOf => scope => (condition, then, el) => {
         if ( typeOf(condition, scope).base != "Boolean" ) {
-
+            console.log("✗: expected boolean")
         }
 
-        return joinTypes( typeOf( then, scope ), typeOf( el, scope ) )   
-    }],
+        return JoinTypes( typeOf( then, scope ), typeOf( el, scope ) )   
+    } ],
 ])
 
-console.log( Crawl(ast, immutable.Map({
-    "==" : Type("Function", [NUMBER, NUMBER, BOOLEAN])
-})) )
+console.log("====")
+console.log( JSON.stringify( ast , null, "  " ))
+
+// console.log( Crawl(ast, immutable.Map({
+//     "=="  : Type("Function", [NUMBER, NUMBER, BOOLEAN]),
+//     "and" : Type("Function", [BOOLEAN, BOOLEAN, BOOLEAN])
+// })) )
