@@ -8,7 +8,7 @@ const UnWrap = ([term]) => term
 // ust
 
 const Node = (name, args) => {
-    function type(data) { return { type, data } }
+    const type = (data) => data
 
     type.name = name
 

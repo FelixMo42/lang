@@ -20,7 +20,7 @@ let parse = Language(({Word, KeyWord, Rule, Loop, Optional, Case}) => ({
     ]),
 
     start_rule: "file",
-    // parse: require("../lib/Parse2")
+    parse: require("../lib/Parsev2")
 }))
 
 if (require.main === module) {
