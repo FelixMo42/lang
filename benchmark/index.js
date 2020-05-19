@@ -9,12 +9,9 @@ let text = `\
 suite
     .add('lang', require("./benc_lang")(text))
     .add('lang2', require("./benc_lang2")(text))
-    .add('parsimmon', require("./benc_parsimmon")(text))
 
-    .on('cycle', function(event) {
-        console.log(String(event.target))
-    })
-    .on('complete', function() {
+    .on('cycle', event => console.log(String(event.target)))
+    .on('complete', function () {
         console.log('Fastest is ' + this.filter('fastest').map('name'))
     })
 

@@ -8,7 +8,7 @@ const UnWrap = ([term]) => term
 // ust
 
 const Node = (name, args) => {
-    const type = (data) => data
+    const type = data => Object.assign(data, { type })
 
     type.name = name
 
@@ -76,7 +76,7 @@ let Parse = Language(({Word, KeyWord, Rule, Loop, Case}) => ({
 const ast = Parse( fs.readFileSync("main.ust").toString() )
 
 const Crawler = (callbacks) => {
-    const Crawl = (node, scope) => map.get(node.type)(scope)(...node.data)
+    const Crawl = (node, scope) => map.get(node.type)(scope)(...node)
 
     const map = new Map( callbacks.map(type => [type[0], type[1](Crawl)]) )
 
@@ -94,7 +94,7 @@ const JoinTypes = (a, b) => a == b ? a : ERROR
 const Crawl = Crawler([
     [ Number, () => () => () => NUMBER ],
 
-    [ Variable, () => (scope) => (name) => scope.get(name) ],
+    [ Variable, () => (scope) => (name) => scope.get(name[0]) ],
 
     [ Function, typeOf => scope => (params, value) => {
         let data = params.map(([name, type]) => {
@@ -128,9 +128,10 @@ const Crawl = Crawler([
 ])
 
 console.log("====")
-console.log( JSON.stringify( ast , null, "  " ))
+console.log( ast )
 
-// console.log( Crawl(ast, immutable.Map({
-//     "=="  : Type("Function", [NUMBER, NUMBER, BOOLEAN]),
-//     "and" : Type("Function", [BOOLEAN, BOOLEAN, BOOLEAN])
-// })) )
+console.log( Crawl(ast, immutable.Map({
+    "=="  : Type("Function", [NUMBER, NUMBER, BOOLEAN]),
+    "+"   : Type("Function", [NUMBER, NUMBER, NUMBER]),
+    "and" : Type("Function", [BOOLEAN, BOOLEAN, BOOLEAN])
+})) )
