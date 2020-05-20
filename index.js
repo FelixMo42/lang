@@ -22,10 +22,6 @@ const If           = Node("if", [ "condtion", "then", "else" ])
 const Variable     = Node("variable", [ "name" ])
 const Decleration  = Node("decleration", [ "key", "value" ])
 
-// const Programme = (data) => ({ functions: new Map(), baseScope: immutable.Map(data) })
-// const Scope = (parent=immutable.Map()) => parent
-// const Variable = (scope, key, type, value) => scope.set(({key, type, value}))
-
 //
 
 let Parse = Language(({Word, KeyWord, Rule, Loop, Case}) => ({
